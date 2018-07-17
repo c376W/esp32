@@ -27,12 +27,8 @@ For example, for a webserver that shows the current humidity, there could be:
 - A driver for the humidity sensor
 - Main code tying it all together
 
-ESP-IDF makes these components explicit and configurable. To do that,
-when a project is compiled, the build environment will look up all the
-components in the ESP-IDF directories, the project directories and
-(optionally) in additional custom component directories. It then
-allows the user to configure the ESP-IDF project using a a text-based
-menu system to customize each component. After the components in the
+ESP-IDF makes these components explicit and configurable. When a project is compiled, the build environment will look up all the
+components in the ESP-IDF directories, the project directories and (optionally) additional custom component directories. It allows users to configure the ESP-IDF project using a a text-based menu system to customize each component. After the components in the
 project are configured, the build process will compile the project.
 
 Concepts
@@ -76,7 +72,7 @@ An example project directory tree might look like this::
 
 This example "myProject" contains the following elements:
 
-- A top-level project Makefile. This Makefile set the ``PROJECT_NAME`` variable and (optionally) defines
+- A top-level project Makefile. This Makefile set the ``PROJECT_NAME`` as a variable and (optionally) defines
   other project-wide make variables. It includes the core ``$(IDF_PATH)/make/project.mk`` makefile which
   implements the rest of the ESP-IDF build system.
 
