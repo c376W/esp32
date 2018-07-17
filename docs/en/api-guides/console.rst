@@ -8,27 +8,35 @@ ESP-IDF provides ``console`` component, which includes building blocks needed to
 - Argument parsing, provided by `argtable3`_ library. This library includes APIs useful for parsing GNU style command line arguments.
 - Functions for registration and dispatching of commands.
 
-These facilities can be used together or independently. For example, it is possible to use line editing and command registration features, but use ``getopt`` or custom code for argument parsing, instead of `argtable3`_. Likewise, it is possible to use simpler means of command input (such as ``fgets``) together with the rest of the means for command splitting and argument parsing.
+These facilities can be used together or independently. 
+For example, it is possible to use line editing and command registration features, but use ``getopt`` or custom code for argument parsing, instead of `argtable3`_. Likewise, it is possible to use simpler means of command input (such as ``fgets``) together with the rest of the means for command splitting and argument parsing.
 
 Line editing
 ------------
+To compose commands, the feature allows actions like:
 
-Line editing feature lets users compose commands by typing them, erasing symbols using 'backspace' key, navigating within the command using left/right keys, navigating to previously typed commands using up/down keys, and performing autocompletion using 'tab' key. 
+1. Typing them.
+2. Erasing symbols using 'backspace' key.
+3. Navigating within the command using left/right keys.
+4. Navigating to previously typed commands using up/down keys.
+5. Performing autocompletion using 'tab' key. 
 
-.. note:: This feature relies on ANSI escape sequence support in the terminal application. As such, serial monitors which display raw UART data can not be used together with the line editing library. If you see ``[6n`` or similar escape sequence when running get_started/console example instead of a command prompt (``[esp32]>``), it means that the serial monitor does not support escape sequences. Programs which are known to work are  GNU screen, minicom, and idf_monitor.py (which can be invoked using ``make monitor`` from project directory).
+.. note:: This feature relies on ANSI escape sequence support in the terminal application. Serial monitors which display raw UART data can not be used together with the line editing library. If ``[6n`` or similar escape sequence when running get_started/console example instead of a command prompt (``[esp32]>``)is presented, it means that the serial monitor does not support escape sequences. Programs which are known to work are  GNU screen, minicom, and idf_monitor.py (which can be invoked using ``make monitor`` from project directory).
 
 Here is an overview of functions provided by `linenoise`_ library.
 
 Configuration
 ^^^^^^^^^^^^^
 
-Linenoise library does not need explicit initialization. However, some configuration defaults may need to be changed before invoking the main line editing function.
+Linenoise library does not need explicit initialization. Some configuration defaults may need to be changed before invoking the main line editing function.
 
 ``linenoiseClearScreen``
   Clear terminal screen using an escape sequence and position the cursor at the top left corner.
 
 ``linenoiseSetMultiLine``
-  Switch between single line and multi line editing modes. In single line mode, if the length of the command exceeds the width of the terminal, the command text is scrolled within the line to show the end of the text. In this case the beginning of the text is hidden. Single line needs less data to be sent to refresh screen on each key press, so exhibits less glitching compared to the multi line mode. On the flip side, editing commands and copying command text from terminal in single line mode is harder. Default is single line mode.
+  Switch between single line and multi line editing modes:
+  
+  In single line mode, if the length of the command exceeds the width of the terminal, the command text is scrolled within the line to show the end of the text and the beginning of the text is hidden. Single line needs less data to be sent to refresh screen on each key press, which exhibits less glitching compared to the multi line mode. On the flip side, editing commands and copying command text from terminal in single line mode is harder. Default is single line mode.
 
 
 Main loop
