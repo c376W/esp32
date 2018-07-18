@@ -29,7 +29,7 @@ How To Write a Wi-Fi Application
 
 Preparation
 +++++++++++
-Generally, the most effective way to begin your own Wi-Fi application is to select an example which is similar to your own application, and port the useful part into your project. It is not a MUST but it is strongly recommended that you take some time to read this article first, especially if you want to program a robust Wi-Fi application. This article is supplementary to the Wi-Fi APIs/Examples. It describes the principles of using the Wi-Fi APIs, the limitations of the current Wi-Fi API implementation, and the most common pitfalls in using Wi-Fi. This article also reveals some design details of the Wi-Fi driver. We recommend that you become familiar at least with the following sections: <`ESP32 Wi-Fi API Error Code`_>, <`ESP32 Wi-Fi Programming Model`_>, and <`ESP32 Wi-Fi Event Description`_>.
+The most effective way to begin your own Wi-Fi application is to select an similar example to it, and port the useful part into your project. It is not a MUST but it is strongly recommended that you take some time to read this article first, especially if you want to program a robust Wi-Fi application. This article is supplementary to the Wi-Fi APIs/Examples. It describes the principles of using the Wi-Fi APIs, the limitations of the current Wi-Fi API implementation, and the most common pitfalls in using Wi-Fi. This article also reveals some design details of the Wi-Fi driver. We recommend that you become familiar at least with the following sections: <`ESP32 Wi-Fi API Error Code`_>, <`ESP32 Wi-Fi Programming Model`_>, and <`ESP32 Wi-Fi Event Description`_>.
 
 Setting Wi-Fi Compile-time Options
 ++++++++++++++++++++++++++++++++++++
@@ -45,7 +45,7 @@ Refer to <`ESP32 Wi-Fi Station General Scenario`_>, <`ESP32 Wi-Fi soft-AP Genera
 
 Event-Handling
 ++++++++++++++
-Generally, it is easy to write code in "sunny-day" scenarios, such as <`SYSTEM_EVENT_STA_START`_>, <`SYSTEM_EVENT_STA_CONNECTED`_> etc. The hard part is to write routines in "rainy-day" scenarios, such as <`SYSTEM_EVENT_STA_DISCONNECTED`_> etc. Good handling of "rainy-day" scenarios is fundamental to robust Wi-Fi applications. Refer to <`ESP32 Wi-Fi Event Description`_>, <`ESP32 Wi-Fi Station General Scenario`_>, <`ESP32 Wi-Fi soft-AP General Scenario`_>
+It is easy to write code in "sunny-day" scenarios, such as <`SYSTEM_EVENT_STA_START`_>, <`SYSTEM_EVENT_STA_CONNECTED`_> etc. The hard part is to write routines in "rainy-day" scenarios, such as <`SYSTEM_EVENT_STA_DISCONNECTED`_> etc. Good handling of "rainy-day" scenarios is fundamental to robust Wi-Fi applications. Refer to <`ESP32 Wi-Fi Event Description`_>, <`ESP32 Wi-Fi Station General Scenario`_>, <`ESP32 Wi-Fi soft-AP General Scenario`_>
 
 Write Error-Recovery Routines Correctly at All Times 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -55,6 +55,7 @@ Just like the handling of "rainy-day" scenarios, a good error-recovery routine i
 ESP32 Wi-Fi API Error Code
 ---------------------------
 All of the ESP32 Wi-Fi APIs have well-defined return values, namely, the error code. The error code can be categorized into:
+ 
  - No errors, e.g. ESP_OK means that the API returns successfully
  - Recoverable errors, such as ESP_ERR_NO_MEM, etc.
  - Non-recoverable, non-critical errors 
@@ -117,17 +118,13 @@ The ESP32 Wi-Fi programming model is depicted as follows:
     }
 
 
-The Wi-Fi driver can be considered a black box that knows nothing about high-layer code, such as the
-TCPIP stack, application task, event task, etc. All the Wi-Fi driver can do is receive API calls from the high layer,
-or post an event-queue to a specified queue which is initialized by API esp_wifi_init().
+The Wi-Fi driver knows nothing about high-layer code, such as the TCPIP stack, application task, event task, etc. The Wi-Fi driver can receive API calls from the high layer, or post an event-queue to a specified queue which is initialized by API esp_wifi_init().
 
-The event task is a daemon task which receives events from the Wi-Fi driver or from other subsystems, such
-as the TCPIP stack. The event task will call the default callback function upon receiving the event. For example,
-upon receiving SYSTEM_EVENT_STA_CONNECTED, it will call tcpip_adapter_start() to start the DHCP
-client in its default handler.
+The event task is a daemon task which receives events from the Wi-Fi driver or from other subsystems, such as the TCPIP stack. The event task will call the default callback function upon receiving the event. 
+For example, upon receiving SYSTEM_EVENT_STA_CONNECTED, it will call tcpip_adapter_start() to start the DHCP client in its default handler.
 
-An application can register its own event callback function by using API esp_event_init. Then, the application callback
-function will be called after the default callback. Also, if the application does not want to execute the callback
+An application can register its own event callback function by using API esp_event_init. The application callback
+function will be called after the default callback. If the application does not want to execute the callback
 in the event task, it needs to post the relevant event to the application task in the application callback function.
 
 The application task (code) generally mixes all these things together: it calls APIs to initialize the system/Wi-Fi and
@@ -137,7 +134,7 @@ ESP32 Wi-Fi Event Description
 ------------------------------------
 SYSTEM_EVENT_WIFI_READY
 ++++++++++++++++++++++++++++++++++++
-The Wi-Fi driver will never generate this event, which, as a result, can be ignored by the application event callback. This event may be removed in future releases.
+The Wi-Fi driver will never generate this event, which can be ignored by the application event callback. This event may be removed in future releases.
 
 SYSTEM_EVENT_SCAN_DONE
 ++++++++++++++++++++++++++++++++++++
@@ -180,11 +177,11 @@ Upon receiving this event, the event task will shut down the station's LwIP neti
 Now, let us consider the following scenario:
 
  - The application creates a TCP connection to maintain the application-level keep-alive data that is sent out every 60 seconds.
- - Due to certain reasons, the Wi-Fi connection is cut off, and the <`SYSTEM_EVENT_STA_DISCONNECTED`_> is raised. According to the current implementation, **all TCP connections will be removed and the keep-alive socket will be in a wrong status**. However, since the application designer believes that the network layer should NOT care about this error at the Wi-Fi layer, the application does not close the socket.
+ - Due to certain reasons, the Wi-Fi connection is cut off, and the <`SYSTEM_EVENT_STA_DISCONNECTED`_> is raised. According to the current implementation, **all TCP connections will be removed and the keep-alive socket will be in a wrong status**. Since the application designer believes that the network layer should NOT care about this error at the Wi-Fi layer, the application does not close the socket.
  - Five seconds later, the Wi-Fi connection is restored because esp_wifi_connect() is called in the application event callback function.
  - Sixty seconds later, when the application sends out data with the keep-alive socket, the socket returns an error and the application closes the socket and re-creates it when necessary.
 
-Generally, if the application has a correct error-handling code, upon receiving <`SYSTEM_EVENT_STA_DISCONNECTED`_> the socket can quickly detect the failure without having to wait for 55 seconds. For applications similar to the keep-alive example, we suggest that you close all sockets, once the <`SYSTEM_EVENT_STA_DISCONNECTED`_> is received, and that you restart the application when SYSTEM_EVENT_STA_CONNECTED arises.
+If the application has a correct error-handling code, upon receiving <`SYSTEM_EVENT_STA_DISCONNECTED`_> the socket can quickly detect the failure without having to wait for 55 seconds. For applications similar to the keep-alive example, we suggest that you close all sockets, once the <`SYSTEM_EVENT_STA_DISCONNECTED`_> is received, and that you restart the application when SYSTEM_EVENT_STA_CONNECTED arises.
 
 Ideally, the application sockets and the network layer should not be affected, since the Wi-Fi connection only fails temporarily and recovers very quickly. In future IDF releases, we are going to provide a more robust solution for handling events that disrupt Wi-Fi connection, as ESP32's Wi-Fi functionality continuously improves.
 
